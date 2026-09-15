@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="it">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Un archivio personale di osservazioni insolite.">
+    <title>Stranezze</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">Archivio personale</p>
+                <h1>Stranezze<span>.</span></h1>
+            </div>
+            <p class="intro">Le cose normali diventano interessanti quando le guardi meglio.</p>
+        </header>
+
+        <section class="workspace" aria-label="Gestione osservazioni">
+            <aside class="panel form-panel">
+                <div class="section-heading">
+                    <p class="eyebrow">Nuova nota</p>
+                    <h2>Hai notato qualcosa?</h2>
+                </div>
+                <form id="observation-form">
+                    <label for="title">Titolo</label>
+                    <input id="title" name="title" maxlength="80" required placeholder="Il dettaglio curioso">
+                    <label for="content">Cosa è successo?</label>
+                    <textarea id="content" name="content" maxlength="500" required
+                        placeholder="Raccontalo in poche righe..."></textarea>
+                    <div class="form-grid">
+                        <div>
+                            <label for="category">Categoria</label>
+                            <select id="category" name="category" required>
+                                <option value="quotidiana">Quotidiana</option>
+                                <option value="natura">Natura</option>
+                                <option value="persone">Persone</option>
+                                <option value="tecnologia">Tecnologia</option>
+                                <option value="altro">Altro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="observed_on">Data</label>
+                            <input id="observed_on" name="observed_on" type="date" required>
+                        </div>
+                    </div>
+                    <label for="place">Dove? <span>(opzionale)</span></label>
+                    <input id="place" name="place" maxlength="80" placeholder="Un luogo o una zona">
+                    <label class="checkbox"><input id="is_favorite" name="is_favorite" type="checkbox"> <span>Segna tra
+                            le preferite</span></label>
+                    <button type="submit">Salva osservazione <span aria-hidden="true">&rarr;</span></button>
+                    <p id="form-message" class="message" role="status"></p>
+                </form>
+            </aside>
+
+            <section class="list-panel">
+                <div class="list-heading">
+                    <div>
+                        <p class="eyebrow">La raccolta</p>
+                        <h2 id="count">0 osservazioni</h2>
+                    </div>
+                    <label class="search"><span class="sr-only">Cerca</span><input id="search" type="search"
+                            placeholder="Cerca nella raccolta..."></label>
+                </div>
+                <div id="observations" class="observations" aria-live="polite"></div>
+            </section>
+        </section>
+    </main>
+    <script src="/app.js" defer></script>
+</body>
+
+</html>
