@@ -9,13 +9,14 @@ function appConfig(): array
     }
 
     $config = [
+        'username' => getenv('STRANEZZE_USERNAME') ?: '',
         'password_hash' => getenv('STRANEZZE_PASSWORD_HASH') ?: '',
         'environment' => getenv('APP_ENV') ?: 'production',
         'session_name' => 'stranezze_session',
     ];
 
-    if ($config['password_hash'] === '') {
-        throw new RuntimeException('Configurazione mancante: imposta STRANEZZE_PASSWORD_HASH.');
+    if ($config['username'] === '' || $config['password_hash'] === '') {
+        throw new RuntimeException('Configurazione mancante: imposta STRANEZZE_USERNAME e STRANEZZE_PASSWORD_HASH.');
     }
 
     return $config;

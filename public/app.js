@@ -119,8 +119,8 @@ loginForm.addEventListener('submit', async (event) => {
     const button = loginForm.querySelector('button');
     button.disabled = true;
     try {
-        const password = new FormData(loginForm).get('password');
-        const data = await request('/api?action=login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
+        const loginData = new FormData(loginForm);
+        const data = await request('/api?action=login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: loginData.get('username'), password: loginData.get('password') }) });
         csrfToken = data.csrf_token;
         loginScreen.hidden = true;
         document.querySelector('main').hidden = false;

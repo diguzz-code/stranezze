@@ -28,10 +28,10 @@ function requireCsrf(): void
     }
 }
 
-function login(string $password): bool
+function login(string $username, string $password): bool
 {
     $config = appConfig();
-    if (!password_verify($password, $config['password_hash'])) {
+    if (!hash_equals($config['username'], $username) || !password_verify($password, $config['password_hash'])) {
         return false;
     }
 

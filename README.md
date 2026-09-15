@@ -18,10 +18,11 @@ La password non è scritta nel codice. Genera un hash con PHP:
 php -r "echo password_hash('scegli-una-password-lunga', PASSWORD_DEFAULT), PHP_EOL;"
 ```
 
-Imposta il risultato come variabile d'ambiente `STRANEZZE_PASSWORD_HASH`. Su Windows PowerShell, solo per la sessione corrente:
+Imposta il risultato come variabili d'ambiente `STRANEZZE_USERNAME` e `STRANEZZE_PASSWORD_HASH`. Per l'utente iniziale:
 
 ```powershell
 $env:STRANEZZE_PASSWORD_HASH = 'incolla-qui-l-hash'
+$env:STRANEZZE_USERNAME = 'diegorenesto'
 ```
 
 Su un hosting, aggiungi la stessa variabile dal pannello di configurazione dell'applicazione. Non mettere la password, l'hash o un file `.env` reale in Git.
@@ -45,6 +46,7 @@ Dalla cartella del progetto:
 
 ```powershell
 $env:STRANEZZE_PASSWORD_HASH = 'il-tuo-hash'
+$env:STRANEZZE_USERNAME = 'diegorenesto'
 .\start.ps1
 ```
 

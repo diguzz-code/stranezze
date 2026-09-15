@@ -60,9 +60,10 @@ $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, ['options' => ['min_ran
 try {
     if ($method === 'POST' && ($_GET['action'] ?? '') === 'login') {
         $data = requestData();
+        $username = trim((string)($data['username'] ?? ''));
         $password = (string)($data['password'] ?? '');
-        if ($password === '' || !login($password)) {
-            respond(['error' => 'Password non valida.'], 401);
+        if ($username === '' || $password === '' || !login($username, $password)) {
+            respond(['error' => 'Credenziali non valide.'], 401);
         }
         respond(['authenticated' => true, 'csrf_token' => csrfToken()]);
     }
