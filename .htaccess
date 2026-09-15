@@ -1,0 +1,8 @@
+Options -Indexes
+DirectoryIndex router.php
+
+RewriteEngine On
+RewriteRule ^(data|database|tools|tests)(/|$) - [F,L]
+RewriteRule ^php\.ini$ - [F,L]
+RewriteRule ^\.env - [F,L]
+RewriteRule ^.*$ router.php [L,QSA]

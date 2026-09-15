@@ -10,13 +10,29 @@
 </head>
 
 <body>
+    <section id="login-screen" class="login-screen" hidden>
+        <div class="login-card">
+            <p class="eyebrow">Area privata</p>
+            <h1>Stranezze<span>.</span></h1>
+            <p>Accedi per proteggere la tua raccolta.</p>
+            <form id="login-form">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required>
+                <button type="submit">Accedi <span aria-hidden="true">&rarr;</span></button>
+                <p id="login-message" class="message" role="alert"></p>
+            </form>
+        </div>
+    </section>
     <main class="shell">
         <header class="topbar">
             <div>
                 <p class="eyebrow">Archivio personale</p>
                 <h1>Stranezze<span>.</span></h1>
             </div>
-            <p class="intro">Le cose normali diventano interessanti quando le guardi meglio.</p>
+            <div class="header-actions">
+                <p class="intro">Le cose normali diventano interessanti quando le guardi meglio.</p>
+                <button id="logout" class="button-quiet" type="button">Esci</button>
+            </div>
         </header>
 
         <section class="workspace" aria-label="Gestione osservazioni">
@@ -64,8 +80,22 @@
                     </div>
                     <label class="search"><span class="sr-only">Cerca</span><input id="search" type="search"
                             placeholder="Cerca nella raccolta..."></label>
+                    <div class="toolbar">
+                        <select id="category-filter" aria-label="Filtra per categoria">
+                            <option value="">Tutte le categorie</option>
+                            <option value="quotidiana">Quotidiana</option>
+                            <option value="natura">Natura</option>
+                            <option value="persone">Persone</option>
+                            <option value="tecnologia">Tecnologia</option>
+                            <option value="altro">Altro</option>
+                        </select>
+                        <label class="favorite-filter"><input id="favorite-filter" type="checkbox"> Preferite</label>
+                        <button id="export" class="button-quiet" type="button">Esporta CSV</button>
+                    </div>
                 </div>
+                <div id="stats" class="stats" aria-label="Statistiche raccolta"></div>
                 <div id="observations" class="observations" aria-live="polite"></div>
+                <div id="pagination" class="pagination"></div>
             </section>
         </section>
     </main>

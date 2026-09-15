@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -57,16 +58,87 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 
 try {
+    if ($method === 'POST' && ($_GET['action'] ?? '') === 'login') {
+        $data = requestData();
+        $password = (string)($data['password'] ?? '');
+        if ($password === '' || !login($password)) {
+            respond(['error' => 'Password non valida.'], 401);
+        }
+        respond(['authenticated' => true, 'csrf_token' => csrfToken()]);
+    }
+
+    if ($method === 'POST' && ($_GET['action'] ?? '') === 'logout') {
+        requireAuth();
+        requireCsrf();
+        logout();
+        respond(['authenticated' => false]);
+    }
+
+    if ($method === 'GET' && ($_GET['action'] ?? '') === 'session') {
+        startSecureSession();
+        respond([
+            'authenticated' => !empty($_SESSION['authenticated']),
+            'csrf_token' => !empty($_SESSION['authenticated']) ? csrfToken() : null,
+        ]);
+    }
+
+    requireAuth();
+    if (in_array($method, ['POST', 'PUT', 'DELETE'], true)) {
+        requireCsrf();
+    }
+
     $pdo = database();
+    if ($method === 'GET' && ($_GET['action'] ?? '') === 'stats') {
+        $total = (int)$pdo->query('SELECT COUNT(*) FROM observations')->fetchColumn();
+        $favorites = (int)$pdo->query('SELECT COUNT(*) FROM observations WHERE is_favorite = 1')->fetchColumn();
+        $categories = $pdo->query('SELECT category, COUNT(*) AS amount FROM observations GROUP BY category ORDER BY amount DESC')->fetchAll();
+        respond(['total' => $total, 'favorites' => $favorites, 'categories' => $categories]);
+    }
+
+    if ($method === 'GET' && ($_GET['action'] ?? '') === 'export') {
+        $items = $pdo->query('SELECT title, content, category, observed_on, place, is_favorite, created_at FROM observations ORDER BY observed_on DESC, id DESC')->fetchAll();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="stranezze-export.csv"');
+        $output = fopen('php://output', 'wb');
+        fputcsv($output, ['Titolo', 'Testo', 'Categoria', 'Data', 'Luogo', 'Preferita', 'Creata']);
+        foreach ($items as $item) {
+            fputcsv($output, $item);
+        }
+        fclose($output);
+        exit;
+    }
+
     if ($method === 'GET') {
         $query = trim((string)($_GET['q'] ?? ''));
-        $statement = $query === ''
-            ? $pdo->query('SELECT * FROM observations ORDER BY observed_on DESC, id DESC')
-            : $pdo->prepare('SELECT * FROM observations WHERE title LIKE :query OR content LIKE :query OR place LIKE :query ORDER BY observed_on DESC, id DESC');
+        $category = trim((string)($_GET['category'] ?? ''));
+        $favorite = ($_GET['favorite'] ?? '') === '1';
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $perPage = min(50, max(5, (int)($_GET['per_page'] ?? 10)));
+        $conditions = [];
+        $parameters = [];
         if ($query !== '') {
-            $statement->execute(['query' => '%' . $query . '%']);
+            $conditions[] = '(title LIKE :query OR content LIKE :query OR place LIKE :query)';
+            $parameters['query'] = '%' . $query . '%';
         }
-        respond(['items' => $statement->fetchAll()]);
+        if ($category !== '') {
+            $conditions[] = 'category = :category';
+            $parameters['category'] = $category;
+        }
+        if ($favorite) {
+            $conditions[] = 'is_favorite = 1';
+        }
+        $where = $conditions === [] ? '' : ' WHERE ' . implode(' AND ', $conditions);
+        $totalStatement = $pdo->prepare('SELECT COUNT(*) FROM observations' . $where);
+        $totalStatement->execute($parameters);
+        $total = (int)$totalStatement->fetchColumn();
+        $statement = $pdo->prepare('SELECT * FROM observations' . $where . ' ORDER BY observed_on DESC, id DESC LIMIT :limit OFFSET :offset');
+        foreach ($parameters as $key => $value) {
+            $statement->bindValue(':' . $key, $value, PDO::PARAM_STR);
+        }
+        $statement->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $statement->bindValue(':offset', ($page - 1) * $perPage, PDO::PARAM_INT);
+        $statement->execute();
+        respond(['items' => $statement->fetchAll(), 'pagination' => ['page' => $page, 'per_page' => $perPage, 'total' => $total, 'pages' => max(1, (int)ceil($total / $perPage))]]);
     }
 
     if ($method === 'POST' || $method === 'PUT') {
