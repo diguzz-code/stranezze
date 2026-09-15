@@ -69,7 +69,7 @@ Scegli un hosting con PHP 8.2+, `PDO_SQLITE`, SQLite scrivibile e Apache. Carica
 
 1. Carica i file del progetto, senza `data/stranezze.sqlite` se vuoi iniziare vuoto.
 2. Crea la cartella `data` con permessi scrivibili dall'utente PHP.
-3. Imposta `STRANEZZE_PASSWORD_HASH` nel pannello dell'hosting.
+3. Imposta `STRANEZZE_USERNAME` e `STRANEZZE_PASSWORD_HASH` nel pannello dell'hosting.
 4. Esegui `php database/init.php` via SSH, oppure crea il database prima del deployment con l'ambiente PHP configurato.
 5. Attiva HTTPS e usa l'URL pubblico dell'app.
 

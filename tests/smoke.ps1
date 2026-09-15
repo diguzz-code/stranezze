@@ -8,8 +8,13 @@ if (-not $php) {
 if (-not $php) { throw 'PHP non trovato nel PATH' }
 $phpDirectory = Split-Path $php.Source
 $extensionDirectory = Join-Path $phpDirectory 'ext'
+$testPassword = [Guid]::NewGuid().ToString('N')
+$env:STRANEZZE_USERNAME = 'smoke-test'
+$env:STRANEZZE_TEST_PASSWORD = $testPassword
+$env:STRANEZZE_PASSWORD_HASH = (& $php.Source -r "echo password_hash(getenv('STRANEZZE_TEST_PASSWORD'), PASSWORD_DEFAULT);").Trim()
 & $php.Source -c (Join-Path $PWD 'php.ini') -d "extension_dir=$extensionDirectory" database/init.php | Out-Host
 $server = Start-Process -FilePath $php.Source -WorkingDirectory $PWD -ArgumentList @('-c', (Join-Path $PWD 'php.ini'), '-d', "extension_dir=$extensionDirectory", '-S', '127.0.0.1:8099', 'router.php') -PassThru -WindowStyle Hidden
+$createdId = $null
 try {
     $ready = $false
     1..1000 | ForEach-Object {
@@ -24,10 +29,12 @@ try {
     }
     if (-not $ready) { throw 'Server PHP non raggiungibile' }
     $webSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    $loginBody = @{ username = 'smoke-test'; password = $testPassword } | ConvertTo-Json
     $login = Invoke-RestMethod -Uri 'http://127.0.0.1:8099/api?action=login' -Method Post -ContentType 'application/json' -Body $loginBody -WebSession $webSession
     $csrfHeaders = @{ 'X-CSRF-Token' = $login.csrf_token }
     $payload = @{ title = 'Test <script>'; content = 'Contenuto di prova'; category = 'altro'; observed_on = (Get-Date -Format 'yyyy-MM-dd'); place = ''; is_favorite = $false } | ConvertTo-Json
     $created = Invoke-RestMethod -Uri 'http://127.0.0.1:8099/api' -Method Post -ContentType 'application/json' -Headers $csrfHeaders -Body $payload -WebSession $webSession
+    $createdId = $created.item
     if (-not $created.item) { throw 'Creazione fallita' }
     $items = Invoke-RestMethod -Uri 'http://127.0.0.1:8099/api' -WebSession $webSession
     if ($items.items.Count -lt 1) { throw 'Elenco vuoto dopo la creazione' }
@@ -35,5 +42,8 @@ try {
     if ($found.items.Count -lt 1) { throw 'Ricerca fallita' }
     Write-Output 'Smoke test API superato.'
 } finally {
+    if ($createdId -and $csrfHeaders -and $webSession) {
+        try { Invoke-RestMethod -Uri "http://127.0.0.1:8099/api?id=$createdId" -Method Delete -Headers $csrfHeaders -WebSession $webSession | Out-Null } catch { }
+    }
     Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
 }
