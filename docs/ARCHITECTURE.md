@@ -1,0 +1,72 @@
+## 1. ARCHITETTURA ATTUALE
+
+`router.php` distingue le richieste `api` da quelle statiche in `public`.
+`.htaccess` imposta `router.php` come entry point, blocca alcune directory e inoltra tutte le richieste.
+L’autenticazione è in `auth.php`, con credenziali da variabili d’ambiente definite in `config.php`.
+Il login crea una sessione PHP, rigenera l’ID e genera un token CSRF.
+Le mutazioni API richiedono sessione autenticata e header `X-CSRF-Token`.
+`index.php` implementa tutti gli endpoint tramite metodo HTTP e parametro `action`.
+Il database SQLite viene inizializzato da `init.php` e aperto tramite `db.php`.
+Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
+`app.js` gestisce login, sessione, CRUD, ricerca, filtri, statistiche, paginazione ed export.
+
+## 2. INVENTARIO FILE
+
+| percorso | ruolo | righe stimate | dipendenze principali |
+|---|---|---:|---|
+| `router.php` | Routing tra API e file pubblici | 26 | PHP, `index.php`, `public` |
+| `.htaccess` | Rewrite e blocco directory | 8 | Apache mod_rewrite |
+| `.htaccess` | Blocco accesso diretto all’API | 1 | Apache |
+| `auth.php` | Sessione, login, logout, CSRF | 55 | `config.php` |
+| `config.php` | Configurazione e sessione sicura | 35 | Variabili d’ambiente, PHP sessioni |
+| `db.php` | Connessione PDO a SQLite | 25 | PDO SQLite, database runtime |
+| `index.php` | Router e implementazione API | 190 | `db.php`, `auth.php`, SQLite |
+| `init.php` | Creazione database ed esecuzione schema | 31 | PDO SQLite, `schema.sql` |
+| `index.html` | Struttura dell’interfaccia | 115 | `styles.css`, `app.js` |
+| `app.js` | Logica frontend e chiamate API | 190 | Fetch API, DOM |
+| `report.py` | Report read-only SQLite | 43 | Python, SQLite |
+| `php.ini` | Configurazione PHP locale | 5 | PDO SQLite |
+| `start.ps1` | Inizializzazione DB e avvio server | 19 | PHP, `php.ini`, `init.php` |
+| `README.md` | Documentazione operativa e deployment | 85 | Tutti i componenti descritti |
+
+## 3. ENDPOINT API ESISTENTI
+
+| metodo | path | auth richiesta | CSRF | input | output | file |
+|---|---|---|---|---|---|---|
+| POST | `/api?action=login` | No | No | JSON `username`, `password` | `authenticated`, `csrf_token` | `index.php`, `auth.php` |
+| POST | `/api?action=logout` | Sì | Sì | Header `X-CSRF-Token` | `authenticated: false` | `index.php`, `auth.php` |
+| GET | `/api?action=session` | No | No | Nessuno | Stato autenticazione e token eventuale | `index.php` |
+| GET | `/api?action=stats` | Sì | No | Nessuno | Totale, preferite, categorie | `index.php` |
+| GET | `/api?action=export` | Sì | No | Nessuno | File CSV | `index.php` |
+| GET | `api` | Sì | No | `q`, `category`, `favorite`, `page`, `per_page` | Lista osservazioni e paginazione | `index.php` |
+| POST | `api` | Sì | Sì | JSON `title`, `content`, `category`, `observed_on`, `place`, `is_favorite` | ID della nuova osservazione | `index.php` |
+| PUT | `/api?id={id}` | Sì | Sì | ID query string e JSON osservazione | `ok: true` | `index.php` |
+| DELETE | `/api?id={id}` | Sì | Sì | ID query string | `ok: true` | `index.php` |
+
+## 4. SCHEMA DATABASE ATTUALE
+
+Lo schema effettivo non è ricostruibile dai soli file allegati: `init.php` legge ed esegue il contenuto di `schema.sql`, ma `schema.sql` non è tra i file allegati.
+
+Da `init.php` è osservabile soltanto che:
+
+- il database è SQLite;
+- il file viene creato in `stranezze.sqlite`;
+- viene abilitato `PRAGMA foreign_keys = ON`;
+- viene eseguito integralmente il contenuto di `schema.sql`;
+- `index.php` presuppone una tabella `observations`;
+- le colonne utilizzate sono `id`, `title`, `content`, `category`, `observed_on`, `place`, `is_favorite`, `created_at`, `updated_at`;
+- `id` è usato come identificativo numerico e ordinamento;
+- non sono visibili, nei file allegati, indici o foreign key effettivamente definiti.
+
+## 5. PUNTI DEBOLI CONCRETI
+
+- `index.php`, funzione `requestData()`: non limita la dimensione del corpo HTTP prima di leggerlo integralmente con `file_get_contents('php://input')`.
+- `index.php`, funzione `validateData()`: valida `category` solo in scrittura; il filtro GET `category` viene usato nella query senza verificare che appartenga alle categorie ammesse.
+- `index.php`, ramo `GET` principale: `per_page` è limitato a 50 ma non esiste un limite esplicito alla lunghezza di `q`.
+- `index.php`, funzione `respond()`: non gestisce il fallimento di `json_encode()`, quindi un payload non codificabile potrebbe produrre una risposta vuota o incompleta.
+- `auth.php`, funzione `requireCsrf()`: il token CSRF è accettato esclusivamente tramite header, senza alternativa tramite corpo o parametro; questo vincola tutti i client a supportare tale header.
+- `config.php`, funzione `startSecureSession()`: il cookie di sessione è marcato `secure` solo quando la richiesta corrente rileva HTTPS; su HTTP il cookie resta trasmissibile in chiaro.
+- `index.php`, blocco `catch (Throwable $error)`: tutti gli errori applicativi vengono convertiti in HTTP 500 indistintamente, impedendo di distinguere errori di configurazione, database e input lato client.
+- `app.js`, funzione `loadItems()`: un errore della richiesta principale non viene gestito internamente; il caricamento iniziale dipende dal `catch` di `boot()`, mentre i caricamenti successivi dai listener dei filtri gestiscono solo il messaggio del form.
+- `app.js`, funzione `render()`: il contatore mostra solo il numero di elementi presenti nella pagina corrente, mentre l’API restituisce anche il totale filtrato; l’interfaccia può quindi mostrare un conteggio fuorviante.
+- `.htaccess` e `.htaccess`: l’accesso diretto ad `api` è negato dal file Apache dedicato, mentre il routing applicativo richiede che `api` venga inoltrato a `index.php`; il comportamento dipende dalla corretta applicazione gerarchica delle regole Apache.
