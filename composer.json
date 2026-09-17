@@ -3,7 +3,12 @@
     "description": "Applicazione Stranezze",
     "type": "project",
     "require": {
-        "php": ">=8.2"
+        "php": ">=8.2",
+        "robmorgan/phinx": "^0.16"
+    },
+    "scripts": {
+        "migrate": "phinx migrate -e development",
+        "migrate:rollback": "phinx rollback -e development"
     },
     "autoload": {
         "psr-4": {

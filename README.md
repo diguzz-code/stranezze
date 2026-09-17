@@ -51,6 +51,23 @@ php tools/check_autoload.php
 
 Il namespace `Stranezze\\` viene caricato da `src/` tramite autoload PSR-4. La cartella `vendor/` e il file `.env` restano esclusi da Git.
 
+## Migration del database
+
+Phinx gestisce lo schema SQLite tramite migration versionate. Per creare il database da zero:
+
+```powershell
+composer migrate
+```
+
+Per annullare l'ultima migration e ricreare lo schema:
+
+```powershell
+composer migrate:rollback
+composer migrate
+```
+
+Il percorso predefinito è `data/stranezze.sqlite`; può essere sovrascritto con `STRANEZZE_DB_PATH`. Durante la transizione `database/init.php` resta disponibile, ma non va eseguito sullo stesso database già gestito da Phinx.
+
 ## Avvio
 
 Dalla cartella del progetto:
