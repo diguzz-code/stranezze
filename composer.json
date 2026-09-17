@@ -1,0 +1,13 @@
+{
+    "name": "stranezze/app",
+    "description": "Applicazione Stranezze",
+    "type": "project",
+    "require": {
+        "php": ">=8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Stranezze\\": "src/"
+        }
+    }
+}

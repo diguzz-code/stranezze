@@ -45,18 +45,38 @@ Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 
 ## 4. SCHEMA DATABASE ATTUALE
 
-Lo schema effettivo non è ricostruibile dai soli file allegati: `init.php` legge ed esegue il contenuto di `schema.sql`, ma `schema.sql` non è tra i file allegati.
+### Tabella `observations`
 
-Da `init.php` è osservabile soltanto che:
+| colonna | tipo | vincoli | default |
+|---|---|---|---|
+| `id` | `INTEGER` | `PRIMARY KEY`, `AUTOINCREMENT` | Nessuno |
+| `title` | `TEXT` | `NOT NULL`; `CHECK (length(title) BETWEEN 1 AND 80)` | Nessuno |
+| `content` | `TEXT` | `NOT NULL`; `CHECK (length(content) BETWEEN 1 AND 500)` | Nessuno |
+| `category` | `TEXT` | `NOT NULL`; `CHECK (category IN ('quotidiana', 'natura', 'persone', 'tecnologia', 'altro'))` | Nessuno |
+| `observed_on` | `TEXT` | `NOT NULL` | Nessuno |
+| `place` | `TEXT` | `NOT NULL`; `CHECK (length(place) <= 80)` | `''` |
+| `is_favorite` | `INTEGER` | `NOT NULL`; `CHECK (is_favorite IN (0, 1))` | `0` |
+| `created_at` | `TEXT` | `NOT NULL` | `CURRENT_TIMESTAMP` |
+| `updated_at` | `TEXT` | `NOT NULL` | `CURRENT_TIMESTAMP` |
 
-- il database è SQLite;
-- il file viene creato in `stranezze.sqlite`;
-- viene abilitato `PRAGMA foreign_keys = ON`;
-- viene eseguito integralmente il contenuto di `schema.sql`;
-- `index.php` presuppone una tabella `observations`;
-- le colonne utilizzate sono `id`, `title`, `content`, `category`, `observed_on`, `place`, `is_favorite`, `created_at`, `updated_at`;
-- `id` è usato come identificativo numerico e ordinamento;
-- non sono visibili, nei file allegati, indici o foreign key effettivamente definiti.
+### Indici
+
+| nome | tabella | colonne | ordinamento |
+|---|---|---|---|
+| `idx_observations_observed_on` | `observations` | `observed_on` | `DESC` |
+| `idx_observations_category` | `observations` | `category` | Predefinito (`ASC`) |
+
+### Foreign key
+
+Non sono definite foreign key nello schema SQL.
+
+### Trigger
+
+Non sono definiti trigger nello schema SQL.
+
+### Inizializzazione tramite `init.php`
+
+`init.php` calcola la directory radice, crea `data/` con permessi `0700` se non esiste e usa `data/stranezze.sqlite` come database SQLite. Apre il database con PDO, abilita le eccezioni e imposta `PDO::FETCH_ASSOC` come modalità di fetch. Esegue `PRAGMA foreign_keys = ON`, legge `database/schema.sql` con `file_get_contents()` e lo esegue integralmente tramite `$pdo->exec($schema)`. Se lo schema non viene letto, termina con errore; al termine stampa il percorso del database pronto. Le istruzioni `IF NOT EXISTS` rendono idempotente la creazione della tabella e degli indici già presenti.
 
 ## 5. PUNTI DEBOLI CONCRETI
 

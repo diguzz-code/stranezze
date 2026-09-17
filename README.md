@@ -29,7 +29,7 @@ Su un hosting, aggiungi la stessa variabile dal pannello di configurazione dell'
 
 ## Requisiti locali
 
-Servono PHP 8.2 o superiore con `PDO_SQLITE`, Python 3.10 o superiore e Git.
+Servono PHP 8.2 o superiore con `PDO_SQLITE`, Composer, Python 3.10 o superiore e Git.
 
 Con winget:
 
@@ -39,6 +39,17 @@ winget install --id PHP.PHP.8.5 -e
 ```
 
 Dopo l'installazione, apri un nuovo terminale.
+
+## Installazione dipendenze
+
+Dalla cartella del progetto, genera l'autoloader Composer:
+
+```powershell
+composer install
+php tools/check_autoload.php
+```
+
+Il namespace `Stranezze\\` viene caricato da `src/` tramite autoload PSR-4. La cartella `vendor/` e il file `.env` restano esclusi da Git.
 
 ## Avvio
 
@@ -87,6 +98,7 @@ Il report apre il database in sola lettura e non cambia i dati.
 ## Struttura
 
 - `public/`: HTML, CSS e JavaScript
+- `src/`: codice PHP organizzato con namespace `Stranezze\\`
 - `api/`: endpoint PHP JSON, autenticazione e configurazione
 - `database/`: schema SQL e inizializzazione
 - `tools/`: strumenti locali Python
