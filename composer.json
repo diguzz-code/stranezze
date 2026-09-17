@@ -7,8 +7,9 @@
         "robmorgan/phinx": "^0.16"
     },
     "scripts": {
-        "migrate": "phinx migrate -e development",
-        "migrate:rollback": "phinx rollback -e development"
+    "migrate": "@php vendor/robmorgan/phinx/bin/phinx migrate -e development",
+    "migrate:rollback": "@php vendor/robmorgan/phinx/bin/phinx rollback -e development",
+    "migrate:production": "@php vendor/robmorgan/phinx/bin/phinx migrate -e production"
     },
     "autoload": {
         "psr-4": {

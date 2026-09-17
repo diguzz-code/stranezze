@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 $databasePath = getenv('STRANEZZE_DB_PATH') ?: __DIR__ . '/data/stranezze.sqlite';
+$customAdapter = \Stranezze\Infrastructure\Phinx\SQLiteAdapter::class;
+\Phinx\Db\Adapter\AdapterFactory::instance()->registerAdapter($customAdapter, $customAdapter);
 
 return [
     'paths' => [
@@ -11,11 +13,11 @@ return [
         'default_migration_table' => 'phinxlog',
         'default_environment' => 'development',
         'development' => [
-            'adapter' => 'sqlite',
+            'adapter' => $customAdapter,
             'name' => $databasePath,
         ],
         'production' => [
-            'adapter' => 'sqlite',
+            'adapter' => $customAdapter,
             'name' => $databasePath,
         ],
     ],

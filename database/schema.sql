@@ -1,3 +1,7 @@
+-- DEPRECATED: schema applicativo v2. La fonte di verità è ora migrations/.
+-- Questo file è mantenuto solo per retrocompatibilità con init.php.
+-- Non aggiungere tabelle qui: usa una migration.
+
 CREATE TABLE IF NOT EXISTS observations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL CHECK (length(title) BETWEEN 1 AND 80),
