@@ -68,6 +68,14 @@ composer migrate
 
 Il percorso predefinito è `data/stranezze.sqlite`; può essere sovrascritto con `STRANEZZE_DB_PATH`. Durante la transizione `database/init.php` resta disponibile, ma non va eseguito sullo stesso database già gestito da Phinx.
 
+La migration `create_users_table` aggiunge la tabella `users` e il repository `Stranezze\\Infrastructure\\UserRepository` espone le prime operazioni per l'autenticazione multiutente. In questa fase l'applicazione v2 continua intenzionalmente a usare `STRANEZZE_USERNAME` e `STRANEZZE_PASSWORD_HASH`: `api/auth.php`, `api/config.php` e gli altri file dell'API non usano ancora la tabella `users`.
+
+Per verificare il repository senza modificare i dati, dopo le migration esegui:
+
+```powershell
+php tools/test_user_repository.php
+```
+
 ## Avvio
 
 Dalla cartella del progetto:
