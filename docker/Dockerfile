@@ -1,5 +1,5 @@
 # docker/Dockerfile
-FROM php:8.2-apache
+FROM php:8.4-apache
 
 # Installa le dipendenze di sistema necessarie per le estensioni PHP
 RUN apt-get update && apt-get install -y \

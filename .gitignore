@@ -1,8 +1,10 @@
 data/*.sqlite
 data/*.sqlite-*
+data/*.bak
 __pycache__/
 *.pyc
 *.log
 .vscode/
 .env
 vendor/
+.env

@@ -11,7 +11,7 @@ services:
       # Monta l'intero progetto dentro il container per lo sviluppo live
       - .:/var/www/html
       # Monta la configurazione di Xdebug
-      - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+    #  - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
     environment:
       # Passa le variabili d'ambiente al container
       # Puoi metterle in un file .env per non averle nel docker-compose.yml
