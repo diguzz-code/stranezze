@@ -12,11 +12,10 @@ services:
       - .:/var/www/html
       # Monta la configurazione di Xdebug
     #  - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+    env_file:
+      # Prima era tutto in environment, spostato per errori col $
+      - .env.local
     environment:
-      # Passa le variabili d'ambiente al container
-      # Puoi metterle in un file .env per non averle nel docker-compose.yml
-      - STRANEZZE_USERNAME=${STRANEZZE_USERNAME}
-      - STRANEZZE_PASSWORD_HASH=${STRANEZZE_PASSWORD_HASH}
       - XDEBUG_MODE=debug
       - XDEBUG_CONFIG=client_host=host.docker.internal client_port=9003
     extra_hosts:
