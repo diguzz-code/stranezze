@@ -1,0 +1,26 @@
+# docker-compose.yml
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: stranezze_app
+    ports:
+      - "8000:80" # Mappa la porta 8000 di Windows alla porta 80 del container
+    volumes:
+      # Monta l'intero progetto dentro il container per lo sviluppo live
+      - .:/var/www/html
+      # Monta la configurazione di Xdebug
+      - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+    environment:
+      # Passa le variabili d'ambiente al container
+      # Puoi metterle in un file .env per non averle nel docker-compose.yml
+      - STRANEZZE_USERNAME=${STRANEZZE_USERNAME}
+      - STRANEZZE_PASSWORD_HASH=${STRANEZZE_PASSWORD_HASH}
+      - XDEBUG_MODE=debug
+      - XDEBUG_CONFIG=client_host=host.docker.internal client_port=9003
+    extra_hosts:
+      # Necessario per far funzionare host.docker.internal su Linux (e Docker Desktop su Windows/Mac)
+      - "host.docker.internal:host-gateway"
+    # (Opzionale) Imposta l'utente per evitare problemi di permessi sui file creati (es. il DB SQLite)
+    # user: "1000:1000" # Decommenta e sostituisci con il tuo UID/GID se necessario

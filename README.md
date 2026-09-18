@@ -21,8 +21,8 @@ php -r "echo password_hash('scegli-una-password-lunga', PASSWORD_DEFAULT), PHP_E
 Imposta il risultato come variabili d'ambiente `STRANEZZE_USERNAME` e `STRANEZZE_PASSWORD_HASH`. Per l'utente iniziale:
 
 ```powershell
-$env:STRANEZZE_PASSWORD_HASH = 'incolla-qui-l-hash'
-$env:STRANEZZE_USERNAME = 'diegorenesto'
+$env:STRANEZZE_PASSWORD_HASH = 'placeholder-da-modificare'
+$env:STRANEZZE_USERNAME = 'placeholder-da-modificare'
 ```
 
 Su un hosting, aggiungi la stessa variabile dal pannello di configurazione dell'applicazione. Non mettere la password, l'hash o un file `.env` reale in Git.
@@ -73,8 +73,8 @@ Il percorso predefinito è `data/stranezze.sqlite`; può essere sovrascritto con
 Dalla cartella del progetto:
 
 ```powershell
-$env:STRANEZZE_PASSWORD_HASH = 'il-tuo-hash'
-$env:STRANEZZE_USERNAME = 'diegorenesto'
+$env:STRANEZZE_PASSWORD_HASH = 'placeholder-da-modificare'
+$env:STRANEZZE_USERNAME = 'placeholder-da-modificare'
 .\start.ps1
 ```
 
