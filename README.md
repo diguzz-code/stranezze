@@ -76,6 +76,19 @@ Per verificare il repository senza modificare i dati, dopo le migration esegui:
 php tools/test_user_repository.php
 ```
 
+## Creazione utente da CLI
+
+Dopo aver eseguito le migration, crea un utente dal terminale passando username e password come argomenti:
+
+```powershell
+php tools/create_user.php test-user Passw0rd!
+php tools/create_user.php admin-user AdminPassw0rd! --role=admin
+```
+
+Il ruolo predefinito è `user`. La password viene salvata esclusivamente come hash e non viene mai mostrata nell'output. Lo script non richiede input interattivo.
+
+Se `STRANEZZE_DB_PATH` non è impostata, viene usato `data/stranezze.sqlite`. Gli errori di validazione, inclusi username già esistente, password troppo corta e ruolo non valido, terminano con codice `1`; gli errori del database terminano con codice `2`.
+
 ## Avvio
 
 Dalla cartella del progetto:
