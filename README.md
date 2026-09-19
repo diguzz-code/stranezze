@@ -1,6 +1,6 @@
 # Stranezze
 
-Una piccola app web per raccogliere osservazioni insolite della vita quotidiana. La v2 protegge i dati con login, sessione e CSRF e può essere pubblicata su un hosting PHP con SQLite.
+Una piccola app web per raccogliere osservazioni insolite della vita quotidiana. La v3 protegge i dati con login, sessione e CSRF e può essere pubblicata su un hosting PHP con SQLite.
 
 ## Tecnologie
 
@@ -10,22 +10,35 @@ Una piccola app web per raccogliere osservazioni insolite della vita quotidiana.
 - Python per un report in sola lettura
 - Apache con rewrite per il deployment
 
-## Configurazione sicura
+## Setup
 
-Le credenziali dell'applicazione sono memorizzate nella tabella `users`; la password non è scritta nel codice. Crea un hash con PHP quando aggiungi un utente tramite gli strumenti del progetto:
-
-```powershell
-php -r "echo password_hash('scegli-una-password-lunga', PASSWORD_DEFAULT), PHP_EOL;"
-```
-
-Le variabili legacy `STRANEZZE_USERNAME` e `STRANEZZE_PASSWORD_HASH` possono restare presenti per rollback, ma da questa versione non vengono lette dall'API. Per l'utente iniziale usa la migration e lo script CLI descritti più avanti:
+Dopo il clone, dalla cartella del progetto installa le dipendenze e crea lo schema del database:
 
 ```powershell
-$env:STRANEZZE_PASSWORD_HASH = 'placeholder-da-modificare'
-$env:STRANEZZE_USERNAME = 'placeholder-da-modificare'
+composer install
+composer migrate
 ```
 
-Non mettere la password, l'hash o un file `.env` reale in Git.
+Crea quindi il primo utente dalla CLI. La password viene trasformata in hash e non viene scritta nel codice o mostrata nell'output:
+
+```powershell
+php tools/create_user.php admin-user AdminPassw0rd! --role=admin
+```
+
+Avvia l'applicazione e apri http://127.0.0.1:8000 per accedere con l'utente appena creato:
+
+```powershell
+.\start.ps1
+```
+
+Per usare Docker Compose, copia `.env.example` in `.env.local` prima di avviare il container:
+
+```powershell
+Copy-Item .env.example .env.local
+docker compose up --build
+```
+
+Non mettere password, hash o file `.env` reali in Git.
 
 ## Requisiti locali
 
@@ -40,16 +53,7 @@ winget install --id PHP.PHP.8.5 -e
 
 Dopo l'installazione, apri un nuovo terminale.
 
-## Installazione dipendenze
-
-Dalla cartella del progetto, genera l'autoloader Composer:
-
-```powershell
-composer install
-php tools/check_autoload.php
-```
-
-Il namespace `Stranezze\\` viene caricato da `src/` tramite autoload PSR-4. La cartella `vendor/` e il file `.env` restano esclusi da Git.
+Il namespace `Stranezze\\` viene caricato da `src/` tramite autoload PSR-4. La cartella `vendor/` e i file `.env` restano esclusi da Git.
 
 ## Migration del database
 
@@ -68,7 +72,7 @@ composer migrate
 
 Il percorso predefinito è `data/stranezze.sqlite`; può essere sovrascritto con `STRANEZZE_DB_PATH`. Durante la transizione `database/init.php` resta disponibile, ma non va eseguito sullo stesso database già gestito da Phinx.
 
-La migration `create_users_table` aggiunge la tabella `users` e il repository `Stranezze\\Infrastructure\\UserRepository` espone le operazioni per l'autenticazione multiutente. L'API autentica ora gli utenti tramite questa tabella, verifica `password_hash`, rifiuta gli utenti inattivi, salva `user_id`, `username` e `role` nella sessione e aggiorna `last_login_at`. Le variabili legacy `STRANEZZE_USERNAME` e `STRANEZZE_PASSWORD_HASH` restano configurate per rollback, ma non vengono più lette dal codice API.
+La migration `create_users_table` aggiunge la tabella `users` e il repository `Stranezze\\Infrastructure\\UserRepository` espone le operazioni per l'autenticazione multiutente. L'API autentica gli utenti tramite questa tabella, verifica `password_hash`, rifiuta gli utenti inattivi, salva `user_id`, `username` e `role` nella sessione e aggiorna `last_login_at`.
 
 Per verificare il repository senza modificare i dati, dopo le migration esegui:
 
@@ -76,16 +80,9 @@ Per verificare il repository senza modificare i dati, dopo le migration esegui:
 php tools/test_user_repository.php
 ```
 
-## Creazione utente da CLI
+## Creazione utenti da CLI
 
-Dopo aver eseguito le migration, crea un utente dal terminale passando username e password come argomenti:
-
-```powershell
-php tools/create_user.php test-user Passw0rd!
-php tools/create_user.php admin-user AdminPassw0rd! --role=admin
-```
-
-Il ruolo predefinito è `user`. La password viene salvata esclusivamente come hash e non viene mai mostrata nell'output. Lo script non richiede input interattivo.
+Dopo il primo account, puoi creare altri utenti dal terminale passando username e password come argomenti. Il ruolo predefinito è `user`; lo script non richiede input interattivo.
 
 Se `STRANEZZE_DB_PATH` non è impostata, viene usato `data/stranezze.sqlite`. Gli errori di validazione, inclusi username già esistente, password troppo corta e ruolo non valido, terminano con codice `1`; gli errori del database terminano con codice `2`.
 
@@ -116,7 +113,7 @@ Scegli un hosting con PHP 8.2+, `PDO_SQLITE`, SQLite scrivibile e Apache. Carica
 
 1. Carica i file del progetto, senza `data/stranezze.sqlite` se vuoi iniziare vuoto.
 2. Crea la cartella `data` con permessi scrivibili dall'utente PHP.
-3. Crea l'utente amministratore con `php tools/create_user.php` e configura le variabili legacy solo se servono per un rollback.
+3. Crea l'utente amministratore con `php tools/create_user.php`.
 4. Esegui `php database/init.php` via SSH, oppure crea il database prima del deployment con l'ambiente PHP configurato.
 5. Attiva HTTPS e usa l'URL pubblico dell'app.
 

@@ -9,9 +9,7 @@ if (-not $php) { throw 'PHP non trovato nel PATH' }
 $phpDirectory = Split-Path $php.Source
 $extensionDirectory = Join-Path $phpDirectory 'ext'
 $testPassword = [Guid]::NewGuid().ToString('N')
-$env:STRANEZZE_USERNAME = 'smoke-test'
 $env:STRANEZZE_TEST_PASSWORD = $testPassword
-$env:STRANEZZE_PASSWORD_HASH = (& $php.Source -r "echo password_hash(getenv('STRANEZZE_TEST_PASSWORD'), PASSWORD_DEFAULT);").Trim()
 & $php.Source -c (Join-Path $PWD 'php.ini') -d "extension_dir=$extensionDirectory" database/init.php | Out-Host
 $server = Start-Process -FilePath $php.Source -WorkingDirectory $PWD -ArgumentList @('-c', (Join-Path $PWD 'php.ini'), '-d', "extension_dir=$extensionDirectory", '-S', '127.0.0.1:8099', 'router.php') -PassThru -WindowStyle Hidden
 $createdId = $null
