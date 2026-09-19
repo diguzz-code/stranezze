@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
 function appConfig(): array
 {
     static $config = null;
@@ -9,15 +11,9 @@ function appConfig(): array
     }
 
     $config = [
-        'username' => getenv('STRANEZZE_USERNAME') ?: '',
-        'password_hash' => getenv('STRANEZZE_PASSWORD_HASH') ?: '',
         'environment' => getenv('APP_ENV') ?: 'production',
         'session_name' => 'stranezze_session',
     ];
-
-    if ($config['username'] === '' || $config['password_hash'] === '') {
-        throw new RuntimeException('Configurazione mancante: imposta STRANEZZE_USERNAME e STRANEZZE_PASSWORD_HASH.');
-    }
 
     return $config;
 }

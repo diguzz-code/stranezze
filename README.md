@@ -12,20 +12,20 @@ Una piccola app web per raccogliere osservazioni insolite della vita quotidiana.
 
 ## Configurazione sicura
 
-La password non è scritta nel codice. Genera un hash con PHP:
+Le credenziali dell'applicazione sono memorizzate nella tabella `users`; la password non è scritta nel codice. Crea un hash con PHP quando aggiungi un utente tramite gli strumenti del progetto:
 
 ```powershell
 php -r "echo password_hash('scegli-una-password-lunga', PASSWORD_DEFAULT), PHP_EOL;"
 ```
 
-Imposta il risultato come variabili d'ambiente `STRANEZZE_USERNAME` e `STRANEZZE_PASSWORD_HASH`. Per l'utente iniziale:
+Le variabili legacy `STRANEZZE_USERNAME` e `STRANEZZE_PASSWORD_HASH` possono restare presenti per rollback, ma da questa versione non vengono lette dall'API. Per l'utente iniziale usa la migration e lo script CLI descritti più avanti:
 
 ```powershell
 $env:STRANEZZE_PASSWORD_HASH = 'placeholder-da-modificare'
 $env:STRANEZZE_USERNAME = 'placeholder-da-modificare'
 ```
 
-Su un hosting, aggiungi la stessa variabile dal pannello di configurazione dell'applicazione. Non mettere la password, l'hash o un file `.env` reale in Git.
+Non mettere la password, l'hash o un file `.env` reale in Git.
 
 ## Requisiti locali
 
@@ -68,7 +68,7 @@ composer migrate
 
 Il percorso predefinito è `data/stranezze.sqlite`; può essere sovrascritto con `STRANEZZE_DB_PATH`. Durante la transizione `database/init.php` resta disponibile, ma non va eseguito sullo stesso database già gestito da Phinx.
 
-La migration `create_users_table` aggiunge la tabella `users` e il repository `Stranezze\\Infrastructure\\UserRepository` espone le prime operazioni per l'autenticazione multiutente. In questa fase l'applicazione v2 continua intenzionalmente a usare `STRANEZZE_USERNAME` e `STRANEZZE_PASSWORD_HASH`: `api/auth.php`, `api/config.php` e gli altri file dell'API non usano ancora la tabella `users`.
+La migration `create_users_table` aggiunge la tabella `users` e il repository `Stranezze\\Infrastructure\\UserRepository` espone le operazioni per l'autenticazione multiutente. L'API autentica ora gli utenti tramite questa tabella, verifica `password_hash`, rifiuta gli utenti inattivi, salva `user_id`, `username` e `role` nella sessione e aggiorna `last_login_at`. Le variabili legacy `STRANEZZE_USERNAME` e `STRANEZZE_PASSWORD_HASH` restano configurate per rollback, ma non vengono più lette dal codice API.
 
 Per verificare il repository senza modificare i dati, dopo le migration esegui:
 
@@ -94,8 +94,6 @@ Se `STRANEZZE_DB_PATH` non è impostata, viene usato `data/stranezze.sqlite`. Gl
 Dalla cartella del progetto:
 
 ```powershell
-$env:STRANEZZE_PASSWORD_HASH = 'placeholder-da-modificare'
-$env:STRANEZZE_USERNAME = 'placeholder-da-modificare'
 .\start.ps1
 ```
 
@@ -103,7 +101,7 @@ Apri http://127.0.0.1:8000. Per fermare il server premi `Ctrl+C`.
 
 Lo script `start.ps1` trova automaticamente la directory PHP installata, abilita `PDO_SQLITE` e inizializza il database. Il database viene creato in `data/stranezze.sqlite`, fuori dalla cartella pubblica.
 
-## Funzioni v2
+## Funzioni v3
 
 - Login con password hashata, cookie `HttpOnly` e `SameSite=Strict`
 - Token CSRF per creazione e cancellazione
@@ -118,7 +116,7 @@ Scegli un hosting con PHP 8.2+, `PDO_SQLITE`, SQLite scrivibile e Apache. Carica
 
 1. Carica i file del progetto, senza `data/stranezze.sqlite` se vuoi iniziare vuoto.
 2. Crea la cartella `data` con permessi scrivibili dall'utente PHP.
-3. Imposta `STRANEZZE_USERNAME` e `STRANEZZE_PASSWORD_HASH` nel pannello dell'hosting.
+3. Crea l'utente amministratore con `php tools/create_user.php` e configura le variabili legacy solo se servono per un rollback.
 4. Esegui `php database/init.php` via SSH, oppure crea il database prima del deployment con l'ambiente PHP configurato.
 5. Attiva HTTPS e usa l'URL pubblico dell'app.
 

@@ -9,3 +9,4 @@ __pycache__/
 vendor/
 .env
 .env.local
+data/*.pre-*

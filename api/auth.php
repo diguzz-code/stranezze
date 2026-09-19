@@ -1,7 +1,10 @@
 <?php
 declare(strict_types=1);
 
+use Stranezze\Infrastructure\UserRepository;
+
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/db.php';
 
 function csrfToken(): string
 {
@@ -30,15 +33,29 @@ function requireCsrf(): void
 
 function login(string $username, string $password): bool
 {
-    $config = appConfig();
-    if (!hash_equals($config['username'], $username) || !password_verify($password, $config['password_hash'])) {
+    $repository = new UserRepository(database());
+    $user = $repository->findByUsername($username);
+    $dummyPasswordHash = '$2y$12$Tu5VP57Mqeyq9aW8gwjZ4OzMNzwNiirDdva8VqyRSuCoI68PZ4MUa';
+    $passwordHash = $user?->passwordHash ?? $dummyPasswordHash;
+
+    if (!password_verify($password, $passwordHash) || $user === null || !$user->isActive) {
         return false;
     }
 
     startSecureSession();
     session_regenerate_id(true);
     $_SESSION['authenticated'] = true;
+    $_SESSION['user_id'] = $user->id;
+    $_SESSION['username'] = $user->username;
+    $_SESSION['role'] = $user->role;
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+    try {
+        $repository->updateLastLogin($user->id);
+    } catch (Throwable $error) {
+        error_log('Impossibile aggiornare last_login_at: ' . $error->getMessage());
+    }
+
     return true;
 }
 
