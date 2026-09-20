@@ -5,7 +5,10 @@
 L’autenticazione è in `auth.php`, con credenziali da variabili d’ambiente definite in `config.php`.
 Il login crea una sessione PHP, rigenera l’ID e genera un token CSRF.
 Le mutazioni API richiedono sessione autenticata e header `X-CSRF-Token`.
-`index.php` implementa tutti gli endpoint tramite metodo HTTP e parametro `action`.
+`api/index.php` è un bootstrap sottile: crea le dipendenze HTTP e delega il dispatch a `Stranezze\Http\Router`.
+FastRoute abbina metodo e path `/api`; `Routes` risolve poi il parametro query `action` mantenendo invariati gli URL pubblici.
+I controller in `src/Http/Controller/` contengono la logica HTTP e le query applicative, mentre `AuthMiddleware` applica autenticazione e CSRF in modo dichiarativo.
+`Request` incapsula superglobali e body JSON; `Response` centralizza risposte JSON e CSV con terminazione immediata, preservando il contratto precedente.
 Il database SQLite viene inizializzato da `init.php` e aperto tramite `DatabaseFactory`, usato da `db.php`, dai tool CLI e dall'adapter Phinx.
 Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 `app.js` gestisce login, sessione, CRUD, ricerca, filtri, statistiche, paginazione ed export.
@@ -21,7 +24,13 @@ Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 | `config.php` | Configurazione e sessione sicura | 35 | Variabili d’ambiente, PHP sessioni |
 | `db.php` | Connessione PDO a SQLite | 25 | PDO SQLite, database runtime |
 | `DatabaseFactory.php` | Apertura e configurazione centralizzata delle connessioni SQLite | - | PDO SQLite |
-| `index.php` | Router e implementazione API | 190 | `db.php`, `auth.php`, SQLite |
+| `index.php` | Bootstrap API e composizione dipendenze | 35 | `db.php`, `auth.php`, `src/Http` |
+| `src/Http/Router.php` | Dispatch FastRoute e gestione errori globali | - | FastRoute, controller |
+| `src/Http/Routes.php` | Route e action dichiarative | - | Request, Response |
+| `src/Http/Request.php` | Wrapper della richiesta HTTP | - | Superglobali PHP |
+| `src/Http/Response.php` | Risposte JSON e CSV | - | PHP HTTP |
+| `src/Http/Middleware/AuthMiddleware.php` | Auth e CSRF per route protette | - | `auth.php` |
+| `src/Http/Controller/*` | Controller auth, osservazioni, stats, export | - | PDO, Request, Response |
 | `init.php` | Creazione database ed esecuzione schema | 31 | PDO SQLite, `schema.sql` |
 | `index.html` | Struttura dell’interfaccia | 115 | `styles.css`, `app.js` |
 | `app.js` | Logica frontend e chiamate API | 190 | Fetch API, DOM |
