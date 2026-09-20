@@ -6,7 +6,7 @@ L’autenticazione è in `auth.php`, con credenziali da variabili d’ambiente d
 Il login crea una sessione PHP, rigenera l’ID e genera un token CSRF.
 Le mutazioni API richiedono sessione autenticata e header `X-CSRF-Token`.
 `index.php` implementa tutti gli endpoint tramite metodo HTTP e parametro `action`.
-Il database SQLite viene inizializzato da `init.php` e aperto tramite `db.php`.
+Il database SQLite viene inizializzato da `init.php` e aperto tramite `DatabaseFactory`, usato da `db.php`, dai tool CLI e dall'adapter Phinx.
 Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 `app.js` gestisce login, sessione, CRUD, ricerca, filtri, statistiche, paginazione ed export.
 
@@ -20,6 +20,7 @@ Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 | `auth.php` | Sessione, login, logout, CSRF | 55 | `config.php` |
 | `config.php` | Configurazione e sessione sicura | 35 | Variabili d’ambiente, PHP sessioni |
 | `db.php` | Connessione PDO a SQLite | 25 | PDO SQLite, database runtime |
+| `DatabaseFactory.php` | Apertura e configurazione centralizzata delle connessioni SQLite | - | PDO SQLite |
 | `index.php` | Router e implementazione API | 190 | `db.php`, `auth.php`, SQLite |
 | `init.php` | Creazione database ed esecuzione schema | 31 | PDO SQLite, `schema.sql` |
 | `index.html` | Struttura dell’interfaccia | 115 | `styles.css`, `app.js` |
@@ -76,7 +77,13 @@ Non sono definiti trigger nello schema SQL.
 
 ### Inizializzazione tramite `init.php`
 
-`init.php` calcola la directory radice, crea `data/` con permessi `0700` se non esiste e usa `data/stranezze.sqlite` come database SQLite. Apre il database con PDO, abilita le eccezioni e imposta `PDO::FETCH_ASSOC` come modalità di fetch. Esegue `PRAGMA foreign_keys = ON`, legge `database/schema.sql` con `file_get_contents()` e lo esegue integralmente tramite `$pdo->exec($schema)`. Se lo schema non viene letto, termina con errore; al termine stampa il percorso del database pronto. Le istruzioni `IF NOT EXISTS` rendono idempotente la creazione della tabella e degli indici già presenti.
+`init.php` calcola la directory radice, crea `data/` con permessi `0700` se non esiste e usa `data/stranezze.sqlite` come database SQLite. Apre il database tramite `DatabaseFactory`, che abilita le eccezioni, imposta `PDO::FETCH_ASSOC` e configura i PRAGMA comuni. Legge `database/schema.sql` con `file_get_contents()` e lo esegue integralmente tramite `$pdo->exec($schema)`. Se lo schema non viene letto, termina con errore; al termine stampa il percorso del database pronto. Le istruzioni `IF NOT EXISTS` rendono idempotente la creazione della tabella e degli indici già presenti.
+
+### Connessioni SQLite e WAL
+
+`src/Infrastructure/DatabaseFactory.php` centralizza la creazione e la configurazione delle connessioni PDO SQLite. Dopo l'apertura applica sempre, in questo ordine, `PRAGMA journal_mode = WAL`, `PRAGMA busy_timeout = 5000`, `PRAGMA synchronous = NORMAL` e `PRAGMA foreign_keys = ON`. L'adapter Phinx configura allo stesso modo la connessione creata dal proprio adapter.
+
+L'impostazione dei PRAGMA a ogni nuova connessione è idempotente e non usa connessioni persistenti o pool. La modalità WAL consente letture concorrenti durante le scritture e crea, quando necessario, `data/stranezze.sqlite-wal` e `data/stranezze.sqlite-shm`; questi file sono runtime e sono esclusi da Git.
 
 ## 5. PUNTI DEBOLI CONCRETI
 

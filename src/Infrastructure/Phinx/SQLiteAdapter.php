@@ -5,6 +5,7 @@ namespace Stranezze\Infrastructure\Phinx;
 
 use Phinx\Db\Adapter\AdapterInterface;
 use Phinx\Db\Adapter\SQLiteAdapter as PhinxSQLiteAdapter;
+use Stranezze\Infrastructure\DatabaseFactory;
 
 final class SQLiteAdapter extends PhinxSQLiteAdapter
 {
@@ -19,6 +20,6 @@ final class SQLiteAdapter extends PhinxSQLiteAdapter
     public function connect(): void
     {
         parent::connect();
-        $this->getConnection()->exec('PRAGMA foreign_keys = ON');
+        DatabaseFactory::configure($this->getConnection());
     }
 }

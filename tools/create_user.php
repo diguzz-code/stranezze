@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Stranezze\Infrastructure\UserRepository;
+use Stranezze\Infrastructure\DatabaseFactory;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -55,11 +56,7 @@ try {
         throw new RuntimeException('Database non inizializzato. Esegui prima le migration.');
     }
 
-    $pdo = new PDO('sqlite:' . $databasePath, null, null, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ]);
-    $pdo->exec('PRAGMA foreign_keys = ON');
+    $pdo = DatabaseFactory::create($databasePath);
 
     $repository = new UserRepository($pdo);
     if ($repository->findByUsername($username) !== null) {

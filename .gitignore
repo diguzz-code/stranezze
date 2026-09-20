@@ -1,5 +1,7 @@
 data/*.sqlite
 data/*.sqlite-*
+data/*.sqlite-wal
+data/*.sqlite-shm
 data/*.bak
 __pycache__/
 *.pyc
