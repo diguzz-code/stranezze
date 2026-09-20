@@ -31,14 +31,28 @@ Avvia l'applicazione e apri http://127.0.0.1:8000 per accedere con l'utente appe
 .\start.ps1
 ```
 
-Per usare Docker Compose, copia `.env.example` in `.env.local` prima di avviare il container:
+Per usare Docker Compose, copia `.env.example` in `.env.local` prima di avviare il container. Il file viene caricato direttamente da PHP tramite `vlucas/phpdotenv`; Docker Compose non interpreta né passa i suoi valori:
 
 ```powershell
 Copy-Item .env.example .env.local
 docker compose up --build
 ```
 
-Non mettere password, hash o file `.env` reali in Git.
+Non mettere password, hash o file `.env` o `.env.local` reali in Git.
+
+## Configurazione ambiente
+
+L'applicazione carica `.env.local` dalla directory principale del progetto tramite `Dotenv::createImmutable(...)->safeLoad()`. Il file è facoltativo e viene usato nello sviluppo locale e con Docker; `.env.local` resta escluso da Git.
+
+In produzione non è necessario distribuire un file `.env`: è preferibile configurare le variabili dal pannello dell'hosting o dall'ambiente del processo PHP. Le variabili già presenti nell'ambiente del processo hanno priorità e non vengono sovrascritte da Dotenv. Se `.env.local` non esiste, l'applicazione continua a funzionare usando i valori dell'ambiente di sistema e i propri default.
+
+Per verificare la configurazione locale:
+
+```powershell
+php -r 'require "api/config.php"; var_dump(getenv("APP_ENV"));'
+```
+
+I valori contenenti `$`, ad esempio `TEST_VAR=$2y$12$abc`, vengono letti da PHP senza l'interpolazione di Docker Compose.
 
 ## Requisiti locali
 

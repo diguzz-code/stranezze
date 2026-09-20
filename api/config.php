@@ -3,6 +3,13 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
+$loadedEnvironment = Dotenv\Dotenv::createImmutable(dirname(__DIR__), ['.env.local'])->safeLoad();
+foreach ($loadedEnvironment as $name => $value) {
+    if (getenv($name) === false) {
+        putenv($name . '=' . $value);
+    }
+}
+
 function appConfig(): array
 {
     static $config = null;
