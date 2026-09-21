@@ -123,6 +123,12 @@ Lo script `start.ps1` trova automaticamente la directory PHP installata, abilita
 - Validazione server-side e prepared statements
 - Output del browser creato con `textContent`, senza HTML proveniente dai dati
 
+## Dove trovare i log
+
+Il logging strutturato è scritto da Monolog in `storage/logs/app-YYYY-MM-DD.log`. I file ruotano giornalmente e vengono conservati per trenta giorni. Sono registrati login riusciti o falliti, rate limit, logout, errori HTTP e database e richieste oltre 500 ms. I log non contengono password, hash, token CSRF o body delle richieste.
+
+La directory `storage/logs/` contiene `.gitkeep`, mentre i file `.log` sono esclusi da Git. Se la directory non è scrivibile, il logging viene disattivato silenziosamente e l’applicazione non va in errore.
+
 ## Pubblicazione su hosting PHP
 
 Scegli un hosting con PHP 8.2+, `PDO_SQLITE`, SQLite scrivibile e Apache. Carica il progetto in una directory non pubblica oppure configura il document root sulla directory del progetto. Il file `.htaccess` blocca `data/`, `database/`, `api/`, `tools/`, `tests/` e i file di configurazione, inoltrando le richieste a `router.php`.

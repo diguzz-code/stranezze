@@ -12,3 +12,4 @@ vendor/
 .env
 .env.local
 data/*.pre-*
+storage/logs/*.log

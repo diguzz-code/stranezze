@@ -11,6 +11,7 @@ FastRoute abbina metodo e path `/api`; `Routes` risolve poi il parametro query `
 I controller in `src/Http/Controller/` contengono la logica HTTP e le query applicative, mentre `AuthMiddleware` applica autenticazione e CSRF in modo dichiarativo.
 `Request` incapsula superglobali e body JSON; `Response` centralizza risposte JSON e CSV con terminazione immediata, preservando il contratto precedente.
 `SecurityHeadersMiddleware` applica gli header di sicurezza alle risposte API e agli asset statici; HSTS viene inviato solo su HTTPS.
+Il logging strutturato usa Monolog con un logger iniettabile e un file giornaliero rotante in `storage/logs/`, con retention di trenta giorni. Registra audit del login/logout, rate limit, errori HTTP, errori database e richieste oltre 500 ms senza password, hash, token CSRF o body HTTP.
 Il database SQLite viene inizializzato da `init.php` e aperto tramite `DatabaseFactory`, usato da `db.php`, dai tool CLI e dall'adapter Phinx.
 Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 `app.js` gestisce login, sessione, CRUD, ricerca, filtri, statistiche, paginazione ed export.
@@ -35,6 +36,7 @@ Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 | `src/Http/Middleware/SecurityHeadersMiddleware.php` | Header di sicurezza HTTP globali | - | Superglobali HTTP |
 | `src/Http/Controller/*` | Controller auth, osservazioni, stats, export | - | PDO, Request, Response |
 | `src/Infrastructure/RateLimiter.php` | Rate limiting login su SQLite | - | PDO |
+| `src/Infrastructure/Logger.php` | Wrapper Monolog per logging best-effort | - | Monolog, storage filesystem |
 | `init.php` | Creazione database ed esecuzione schema | 31 | PDO SQLite, `schema.sql` |
 | `index.html` | Struttura dell’interfaccia | 115 | `styles.css`, `app.js` |
 | `app.js` | Logica frontend e chiamate API | 190 | Fetch API, DOM |
@@ -91,6 +93,10 @@ La tabella registra IP, username, timestamp e risultato (`success` 0/1). Gli ind
 ### Trigger
 
 Non sono definiti trigger nello schema SQL.
+
+### Logging
+
+`Logger::create()` configura Monolog con `RotatingFileHandler`, creando `storage/logs/app-YYYY-MM-DD.log` e conservando trenta file giornalieri. Il formato è monolineare con timestamp ISO 8601, livello, canale, messaggio e contesto JSON. Se la directory non è scrivibile o una scrittura fallisce, viene usato un handler nullo e l’applicazione continua a rispondere normalmente.
 
 ### Inizializzazione tramite `init.php`
 

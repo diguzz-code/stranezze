@@ -7,6 +7,7 @@ use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;
 use Stranezze\Http\Middleware\AuthMiddleware;
 use Stranezze\Http\Middleware\SecurityHeadersMiddleware;
+use Stranezze\Infrastructure\Logger;
 use Throwable;
 
 final class Router
@@ -16,6 +17,7 @@ final class Router
         private readonly Request $request,
         private readonly array $controllers,
         private readonly AuthMiddleware $authMiddleware,
+        private readonly Logger $logger,
         private readonly SecurityHeadersMiddleware $securityHeadersMiddleware = new SecurityHeadersMiddleware(),
     ) {
     }
@@ -23,6 +25,17 @@ final class Router
     public function dispatch(): never
     {
         $this->securityHeadersMiddleware->apply();
+        $startedAt = hrtime(true);
+        register_shutdown_function(function () use ($startedAt): void {
+            $durationMs = (hrtime(true) - $startedAt) / 1_000_000;
+            if ($durationMs > 500) {
+                $this->logger->warning('Richiesta lenta.', [
+                    'uri' => (string)($_SERVER['REQUEST_URI'] ?? '/'),
+                    'method' => $this->request->method(),
+                    'duration_ms' => round($durationMs, 2),
+                ]);
+            }
+        });
         try {
             $dispatcher = \FastRoute\simpleDispatcher(function (RouteCollector $routes): void {
                 foreach (Routes::definitions() as $name => $definition) {
@@ -33,9 +46,17 @@ final class Router
             });
             $result = $dispatcher->dispatch($this->request->method(), $this->request->path());
             if ($result[0] === Dispatcher::NOT_FOUND) {
+                $this->logger->warning('Endpoint non trovato.', [
+                    'uri' => (string)($_SERVER['REQUEST_URI'] ?? '/'),
+                    'method' => $this->request->method(),
+                ]);
                 Response::json(['error' => 'Pagina non trovata.'], 404);
             }
             if ($result[0] === Dispatcher::METHOD_NOT_ALLOWED) {
+                $this->logger->warning('Metodo HTTP non consentito.', [
+                    'uri' => (string)($_SERVER['REQUEST_URI'] ?? '/'),
+                    'method' => $this->request->method(),
+                ]);
                 Response::json(['error' => 'Metodo non consentito.'], 405);
             }
 
@@ -48,7 +69,11 @@ final class Router
             $invoke = fn(): never => $controller->{$method}($this->request);
             $this->authMiddleware->handle($this->request, $requirements, $invoke);
         } catch (Throwable $error) {
-            error_log($error->getMessage());
+            $this->logger->error('Errore interno HTTP.', [
+                'uri' => (string)($_SERVER['REQUEST_URI'] ?? '/'),
+                'method' => $this->request->method(),
+                'exception' => $error,
+            ]);
             Response::json(['error' => 'Errore interno.'], 500);
         }
     }
