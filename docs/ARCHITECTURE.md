@@ -4,11 +4,13 @@
 `.htaccess` imposta `router.php` come entry point, blocca alcune directory e inoltra tutte le richieste.
 L’autenticazione è in `auth.php`, con credenziali da variabili d’ambiente definite in `config.php`.
 Il login crea una sessione PHP, rigenera l’ID e genera un token CSRF.
+Il login applica un rate limiting SQLite separato per IP e username: massimo cinque fallimenti in quindici minuti, con pulizia degli eventi oltre un’ora.
 Le mutazioni API richiedono sessione autenticata e header `X-CSRF-Token`.
 `api/index.php` è un bootstrap sottile: crea le dipendenze HTTP e delega il dispatch a `Stranezze\Http\Router`.
 FastRoute abbina metodo e path `/api`; `Routes` risolve poi il parametro query `action` mantenendo invariati gli URL pubblici.
 I controller in `src/Http/Controller/` contengono la logica HTTP e le query applicative, mentre `AuthMiddleware` applica autenticazione e CSRF in modo dichiarativo.
 `Request` incapsula superglobali e body JSON; `Response` centralizza risposte JSON e CSV con terminazione immediata, preservando il contratto precedente.
+`SecurityHeadersMiddleware` applica gli header di sicurezza alle risposte API e agli asset statici; HSTS viene inviato solo su HTTPS.
 Il database SQLite viene inizializzato da `init.php` e aperto tramite `DatabaseFactory`, usato da `db.php`, dai tool CLI e dall'adapter Phinx.
 Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 `app.js` gestisce login, sessione, CRUD, ricerca, filtri, statistiche, paginazione ed export.
@@ -30,7 +32,9 @@ Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 | `src/Http/Request.php` | Wrapper della richiesta HTTP | - | Superglobali PHP |
 | `src/Http/Response.php` | Risposte JSON e CSV | - | PHP HTTP |
 | `src/Http/Middleware/AuthMiddleware.php` | Auth e CSRF per route protette | - | `auth.php` |
+| `src/Http/Middleware/SecurityHeadersMiddleware.php` | Header di sicurezza HTTP globali | - | Superglobali HTTP |
 | `src/Http/Controller/*` | Controller auth, osservazioni, stats, export | - | PDO, Request, Response |
+| `src/Infrastructure/RateLimiter.php` | Rate limiting login su SQLite | - | PDO |
 | `init.php` | Creazione database ed esecuzione schema | 31 | PDO SQLite, `schema.sql` |
 | `index.html` | Struttura dell’interfaccia | 115 | `styles.css`, `app.js` |
 | `app.js` | Logica frontend e chiamate API | 190 | Fetch API, DOM |
@@ -80,6 +84,10 @@ Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 
 Non sono definite foreign key nello schema SQL.
 
+### Tabella `login_attempts`
+
+La tabella registra IP, username, timestamp e risultato (`success` 0/1). Gli indici su `(ip, attempted_at)` e `(username, attempted_at)` supportano il controllo della finestra mobile di quindici minuti. I fallimenti oltre cinque per uno dei due identificatori producono HTTP 429 con `Retry-After`; un login riuscito rimuove i fallimenti associati e viene conservato come evento di successo.
+
 ### Trigger
 
 Non sono definiti trigger nello schema SQL.
@@ -103,6 +111,7 @@ L'impostazione dei PRAGMA a ogni nuova connessione è idempotente e non usa conn
 - `auth.php`, funzione `requireCsrf()`: il token CSRF è accettato esclusivamente tramite header, senza alternativa tramite corpo o parametro; questo vincola tutti i client a supportare tale header.
 - `config.php`, funzione `startSecureSession()`: il cookie di sessione è marcato `secure` solo quando la richiesta corrente rileva HTTPS; su HTTP il cookie resta trasmissibile in chiaro.
 - `index.php`, blocco `catch (Throwable $error)`: tutti gli errori applicativi vengono convertiti in HTTP 500 indistintamente, impedendo di distinguere errori di configurazione, database e input lato client.
+- Il rate limiting del login richiede l’applicazione della migration `create_login_attempts`; senza la tabella il login restituisce errore interno fino all’allineamento dello schema.
 - `app.js`, funzione `loadItems()`: un errore della richiesta principale non viene gestito internamente; il caricamento iniziale dipende dal `catch` di `boot()`, mentre i caricamenti successivi dai listener dei filtri gestiscono solo il messaggio del form.
 - `app.js`, funzione `render()`: il contatore mostra solo il numero di elementi presenti nella pagina corrente, mentre l’API restituisce anche il totale filtrato; l’interfaccia può quindi mostrare un conteggio fuorviante.
 - `.htaccess` e `.htaccess`: l’accesso diretto ad `api` è negato dal file Apache dedicato, mentre il routing applicativo richiede che `api` venga inoltrato a `index.php`; il comportamento dipende dalla corretta applicazione gerarchica delle regole Apache.

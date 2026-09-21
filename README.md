@@ -116,6 +116,8 @@ Lo script `start.ps1` trova automaticamente la directory PHP installata, abilita
 
 - Login con password hashata, cookie `HttpOnly` e `SameSite=Strict`
 - Token CSRF per creazione e cancellazione
+- Rate limiting del login: cinque fallimenti per IP o username in quindici minuti
+- Header di sicurezza globali, con HSTS attivo solo su HTTPS
 - Inserimento, ricerca, filtro per categoria e preferite
 - Paginazione, statistiche e download CSV
 - Validazione server-side e prepared statements
@@ -155,6 +157,6 @@ Il report apre il database in sola lettura e non cambia i dati.
 
 ## Scelte di sicurezza
 
-L'API usa prepared statements, valida i dati sul server, limita categorie e lunghezze, restituisce JSON e non mostra dettagli degli errori interni. Il browser costruisce il contenuto con `textContent`, senza inserire HTML fornito dall'utente. Le mutazioni richiedono sessione autenticata e CSRF.
+L'API usa prepared statements, valida i dati sul server, limita categorie e lunghezze, restituisce JSON e non mostra dettagli degli errori interni. Il browser costruisce il contenuto con `textContent`, senza inserire HTML fornito dall'utente. Le mutazioni richiedono sessione autenticata e CSRF. Il login registra i tentativi nella tabella `login_attempts`; dopo cinque fallimenti nella finestra di quindici minuti restituisce HTTP 429. La CSP consente solo script, stili e immagini locali; per HSTS dietro reverse proxy, configurare `TRUSTED_PROXIES` con gli IP dei proxy autorizzati.
 
 Queste misure riducono bug e vulnerabilita comuni, ma nessun software può garantire sicurezza assoluta. Prima di pubblicare dati reali, esegui aggiornamenti e test aggiuntivi.
