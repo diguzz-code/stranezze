@@ -6,6 +6,7 @@ namespace Stranezze\Http;
 use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;
 use Stranezze\Http\Middleware\AuthMiddleware;
+use Stranezze\Http\Middleware\SecurityHeadersMiddleware;
 use Throwable;
 
 final class Router
@@ -15,11 +16,13 @@ final class Router
         private readonly Request $request,
         private readonly array $controllers,
         private readonly AuthMiddleware $authMiddleware,
+        private readonly SecurityHeadersMiddleware $securityHeadersMiddleware = new SecurityHeadersMiddleware(),
     ) {
     }
 
     public function dispatch(): never
     {
+        $this->securityHeadersMiddleware->apply();
         try {
             $dispatcher = \FastRoute\simpleDispatcher(function (RouteCollector $routes): void {
                 foreach (Routes::definitions() as $name => $definition) {

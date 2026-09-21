@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/vendor/autoload.php';
+
+use Stranezze\Http\Middleware\SecurityHeadersMiddleware;
+
+(new SecurityHeadersMiddleware())->apply();
+
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 if ($requestPath === '/api' || str_starts_with($requestPath, '/api/')) {
     require __DIR__ . '/api/index.php';
