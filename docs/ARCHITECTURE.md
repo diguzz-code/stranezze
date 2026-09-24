@@ -16,6 +16,20 @@ Il database SQLite viene inizializzato da `init.php` e aperto tramite `DatabaseF
 Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 `app.js` gestisce login, sessione, CRUD, ricerca, filtri, statistiche, paginazione ed export.
 
+## 6. TESTING
+
+La suite PHPUnit 11 è divisa in test unitari per dominio e infrastruttura e in uno
+smoke test di integrazione per l'API. I test usano database SQLite temporanei su file,
+applicano uno schema isolato e non accedono a `data/stranezze.sqlite`.
+
+`ApiSmokeTest` avvia `php -S` su una porta assegnata dal sistema, imposta
+`STRANEZZE_DB_PATH`, attende la risposta della sessione, verifica gli endpoint anonimi,
+il rate limiting e gli header di sicurezza, quindi termina il processo.
+
+Gli script disponibili sono `composer test`, `composer test:unit`,
+`composer test:integration` e `composer test:coverage`. GitHub Actions esegue la suite
+su PHP 8.2, 8.3 e 8.4 con SQLite nativo e senza Docker.
+
 ## 2. INVENTARIO FILE
 
 | percorso | ruolo | righe stimate | dipendenze principali |

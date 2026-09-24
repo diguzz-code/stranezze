@@ -10,13 +10,25 @@
         "monolog/monolog": "^3.0"
     },
     "scripts": {
-    "migrate": "@php vendor/robmorgan/phinx/bin/phinx migrate -e development",
-    "migrate:rollback": "@php vendor/robmorgan/phinx/bin/phinx rollback -e development",
-    "migrate:production": "@php vendor/robmorgan/phinx/bin/phinx migrate -e production"
+        "migrate": "@php vendor/robmorgan/phinx/bin/phinx migrate -e development",
+        "migrate:rollback": "@php vendor/robmorgan/phinx/bin/phinx rollback -e development",
+        "migrate:production": "@php vendor/robmorgan/phinx/bin/phinx migrate -e production",
+        "test": "@php vendor/bin/phpunit",
+        "test:unit": "@php vendor/bin/phpunit --testsuite Unit",
+        "test:integration": "@php vendor/bin/phpunit --testsuite Integration",
+        "test:coverage": "@php vendor/bin/phpunit --coverage-text --coverage-clover coverage/clover.xml"
     },
     "autoload": {
         "psr-4": {
             "Stranezze\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Stranezze\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
     }
 }

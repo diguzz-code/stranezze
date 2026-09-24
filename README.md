@@ -1,5 +1,7 @@
 # Stranezze
 
+[![CI](https://github.com/stranezze/app/actions/workflows/ci.yml/badge.svg)](https://github.com/stranezze/app/actions/workflows/ci.yml)
+
 Una piccola app web per raccogliere osservazioni insolite della vita quotidiana. La v3 protegge i dati con login, sessione e CSRF e può essere pubblicata su un hosting PHP con SQLite.
 
 ## Tecnologie
@@ -122,6 +124,20 @@ Lo script `start.ps1` trova automaticamente la directory PHP installata, abilita
 - Paginazione, statistiche e download CSV
 - Validazione server-side e prepared statements
 - Output del browser creato con `textContent`, senza HTML proveniente dai dati
+
+## Testing
+
+La suite automatica usa PHPUnit 11 e database SQLite temporanei: non modifica mai
+`data/stranezze.sqlite`.
+
+```powershell
+composer test
+composer test:unit
+composer test:integration
+composer test:coverage
+```
+
+La CI esegue `composer test` su PHP 8.2, 8.3 e 8.4 con SQLite e senza Docker.
 
 ## Dove trovare i log
 
