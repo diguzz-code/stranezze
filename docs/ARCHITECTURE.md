@@ -54,7 +54,7 @@ su PHP 8.2, 8.3 e 8.4 con SQLite nativo e senza Docker.
 | `init.php` | Creazione database ed esecuzione schema | 31 | PDO SQLite, `schema.sql` |
 | `index.html` | Struttura dell’interfaccia | 115 | `styles.css`, `app.js` |
 | `app.js` | Logica frontend e chiamate API | 190 | Fetch API, DOM |
-| `report.py` | Report read-only SQLite | 43 | Python, SQLite |
+| `report.php` | Report CLI read-only SQLite | - | PHP, PDO SQLite |
 | `php.ini` | Configurazione PHP locale | 5 | PDO SQLite |
 | `start.ps1` | Inizializzazione DB e avvio server | 19 | PHP, `php.ini`, `init.php` |
 | `README.md` | Documentazione operativa e deployment | 85 | Tutti i componenti descritti |

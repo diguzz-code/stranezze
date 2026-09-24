@@ -9,7 +9,7 @@ Una piccola app web per raccogliere osservazioni insolite della vita quotidiana.
 - HTML, CSS e JavaScript per l'interfaccia
 - PHP per l'API locale
 - SQLite e SQL per i dati
-- Python per un report in sola lettura
+- PHP per un report in sola lettura
 - Apache con rewrite per il deployment
 
 ## Setup
@@ -58,7 +58,7 @@ I valori contenenti `$`, ad esempio `TEST_VAR=$2y$12$abc`, vengono letti da PHP 
 
 ## Requisiti locali
 
-Servono PHP 8.2 o superiore con `PDO_SQLITE`, Composer, Python 3.10 o superiore e Git.
+Servono PHP 8.2 o superiore con `PDO_SQLITE`, Composer e Git.
 
 Con winget:
 
@@ -157,14 +157,15 @@ Scegli un hosting con PHP 8.2+, `PDO_SQLITE`, SQLite scrivibile e Apache. Carica
 
 L'app è pensata per un singolo proprietario. Per più utenti servirebbero una tabella account, password reset, ruoli e isolamento dei dati: non vanno aggiunti copiando questa autenticazione.
 
-## Report Python
+## Report CLI
 
 ```powershell
-python tools/report.py data/stranezze.sqlite
-python tools/report.py data/stranezze.sqlite --json
+php tools/report.php data/stranezze.sqlite
+php tools/report.php data/stranezze.sqlite --json
 ```
 
-Il report apre il database in sola lettura e non cambia i dati.
+Il report apre il database in sola lettura e non cambia i dati. Se il percorso non viene
+specificato, usa `STRANEZZE_DB_PATH` oppure `data/stranezze.sqlite`.
 
 ## Struttura
 
@@ -172,7 +173,7 @@ Il report apre il database in sola lettura e non cambia i dati.
 - `src/`: codice PHP organizzato con namespace `Stranezze\\`
 - `api/`: endpoint PHP JSON, autenticazione e configurazione
 - `database/`: schema SQL e inizializzazione
-- `tools/`: strumenti locali Python
+- `tools/`: strumenti locali PHP
 - `data/`: database runtime, escluso da Git
 - `router.php`: serve i file pubblici e inoltra `/api`
 - `.htaccess`: protegge le directory private e abilita Apache rewrite
