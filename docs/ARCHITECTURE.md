@@ -7,7 +7,7 @@ Il login crea una sessione PHP, rigenera l’ID e genera un token CSRF.
 Il login applica un rate limiting SQLite separato per IP e username: massimo cinque fallimenti in quindici minuti, con pulizia degli eventi oltre un’ora.
 Le mutazioni API richiedono sessione autenticata e header `X-CSRF-Token`.
 `api/index.php` è un bootstrap sottile: crea le dipendenze HTTP e delega il dispatch a `Stranezze\Http\Router`.
-FastRoute abbina metodo e path `/api`; `Routes` risolve poi il parametro query `action` mantenendo invariati gli URL pubblici.
+FastRoute abbina metodo e i path `/api` e `/api/v1`; le route sono definite una sola volta senza prefisso e il `Router` le registra su entrambe le basi. `/api/v1` è il percorso versionato ufficiale, mentre `/api` resta un alias deprecato per backward compatibility. `Routes` risolve poi il parametro query `action`, mantenendo invariati gli URL pubblici e senza aggiungere header di deprecazione che possano modificare il contratto HTTP esistente.
 I controller in `src/Http/Controller/` contengono la logica HTTP e le query applicative, mentre `AuthMiddleware` applica autenticazione e CSRF in modo dichiarativo.
 `Request` incapsula superglobali e body JSON; `Response` centralizza risposte JSON e CSV con terminazione immediata, preservando il contratto precedente.
 `SecurityHeadersMiddleware` applica gli header di sicurezza alle risposte API e agli asset statici; HSTS viene inviato solo su HTTPS.
@@ -15,6 +15,12 @@ Il logging strutturato usa Monolog con un logger iniettabile e un file giornalie
 Il database SQLite viene inizializzato da `init.php` e aperto tramite `DatabaseFactory`, usato da `db.php`, dai tool CLI e dall'adapter Phinx.
 Il frontend è una pagina HTML unica con CSS e JavaScript vanilla.
 `app.js` gestisce login, sessione, CRUD, ricerca, filtri, statistiche, paginazione ed export.
+
+### Versioning API
+
+Le API sono disponibili su `/api/v1` e, come alias legacy deprecato, su `/api`. Entrambi i percorsi usano la stessa tabella dichiarativa di route, gli stessi controller e lo stesso formato di query string. Il parametro `?action=...` non cambia: ad esempio, `GET /api?action=session` e `GET /api/v1?action=session` sono equivalenti.
+
+L'alias `/api` non viene rimosso per mantenere compatibilità con il frontend esistente e con i client già distribuiti. Non viene inviato un header di deprecazione, così status, body e header delle risposte restano compatibili.
 
 ## 6. TESTING
 

@@ -90,6 +90,20 @@ Il percorso predefinito è `data/stranezze.sqlite`; può essere sovrascritto con
 
 La migration `create_users_table` aggiunge la tabella `users` e il repository `Stranezze\\Infrastructure\\UserRepository` espone le operazioni per l'autenticazione multiutente. L'API autentica gli utenti tramite questa tabella, verifica `password_hash`, rifiuta gli utenti inattivi, salva `user_id`, `username` e `role` nella sessione e aggiorna `last_login_at`.
 
+## Versioning API
+
+Il percorso ufficiale versionato è `/api/v1`. Il precedente `/api` resta disponibile come alias deprecato per mantenere la compatibilità con il frontend e con i client esistenti. Il formato degli URL interni non cambia: il parametro `?action=...` continua a essere usato come prima.
+
+Esempi equivalenti:
+
+```text
+GET  /api/v1?action=session
+POST /api/v1?action=login
+GET  /api/v1?page=1&per_page=10
+```
+
+Le stesse richieste continuano a funzionare usando `/api`.
+
 Per verificare il repository senza modificare i dati, dopo le migration esegui:
 
 ```powershell

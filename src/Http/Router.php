@@ -38,9 +38,12 @@ final class Router
         });
         try {
             $dispatcher = \FastRoute\simpleDispatcher(function (RouteCollector $routes): void {
-                foreach (Routes::definitions() as $name => $definition) {
-                    foreach ($definition['methods'] as $method) {
-                        $routes->addRoute($method, $definition['path'], $name);
+                foreach (Routes::basePaths() as $basePath) {
+                    foreach (Routes::definitions() as $name => $definition) {
+                        foreach ($definition['methods'] as $method) {
+                            $path = rtrim($basePath, '/') . $definition['path'];
+                            $routes->addRoute($method, $path, $name);
+                        }
                     }
                 }
             });

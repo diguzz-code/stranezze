@@ -5,12 +5,18 @@ namespace Stranezze\Http;
 
 final class Routes
 {
+    /** @return list<string> */
+    public static function basePaths(): array
+    {
+        return ['/api', '/api/v1'];
+    }
+
     /** @return array<string, array<string, mixed>> */
     public static function definitions(): array
     {
         return [
             'api' => [
-                'path' => '/api',
+                'path' => '',
                 'methods' => ['GET', 'POST', 'PUT', 'DELETE'],
                 'actions' => [
                     'GET:session' => ['AuthController', 'session'],
